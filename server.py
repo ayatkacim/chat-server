@@ -24,6 +24,8 @@ def handle(client):
     while True:
         try:
             message = client.recv(1024)
+            if not message:  # لو الرسالة فاضية
+                break
             broadcast(message, client)
         except:
             clients.remove(client)
