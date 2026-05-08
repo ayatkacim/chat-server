@@ -12,29 +12,28 @@ clients = []
 print("Server started...")
 
 def recv_frame(sock):
-    """Read exactly one length-prefixed frame."""
     header = b""
     while len(header) < 4:
         chunk = sock.recv(4 - len(header))
         if not chunk:
-            raise ConnectionError("client disconnected")
+            raise ConnectionError("disconnected")
         header += chunk
     (length,) = struct.unpack("!I", header)
     data = b""
     while len(data) < length:
         chunk = sock.recv(min(8192, length - len(data)))
         if not chunk:
-            raise ConnectionError("client disconnected")
+            raise ConnectionError("disconnected")
         data += chunk
-    return header + data   # re-attach header for broadcast
+    return header + data
 
-def broadcast(frame, sender_sock):
+def broadcast(frame, sender):
     dead = []
     for c in clients:
-        if c != sender_sock:
+        if c != sender:
             try:
                 c.sendall(frame)
-            except Exception:
+            except:
                 dead.append(c)
     for c in dead:
         clients.remove(c)
@@ -45,7 +44,7 @@ def handle(client):
         try:
             frame = recv_frame(client)
             broadcast(frame, client)
-        except Exception:
+        except:
             if client in clients:
                 clients.remove(client)
             client.close()
